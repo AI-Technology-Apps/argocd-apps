@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: openwebui-appset
+  name: argocd-apps
   namespace: argocd
 spec:
   generators:
@@ -15,18 +15,42 @@ spec:
           - list:
               elements:
                 - name: openwebui
+                  type: remote
                   chart: openwebui
                   repoURL: https://helm.openwebui.com/
-                  version: latest
+                  version: 1.0.0
+                - name: localapp
+                  type: local
   template:
     metadata:
       name: '{{name}}'
     spec:
-      project: ai-tools
+      project: default
       source:
-        repoURL: '{{repoURL}}'
-        chart: '{{chart}}'
-        targetRevision: '{{version}}'
+        repoURL: >
+          {{- if eq type "local" -}}
+          https://github.com/AI-Technology-Apps/argocd-apps.git
+          {{- else -}}
+          {{repoURL}}
+          {{- end }}
+        chart: >
+          {{- if eq type "local" -}}
+          {{name}}
+          {{- else -}}
+          {{chart}}
+          {{- end }}
+        targetRevision: >
+          {{- if eq type "local" -}}
+          HEAD
+          {{- else -}}
+          {{version}}
+          {{- end }}
+        path: >
+          {{- if eq type "local" -}}
+          {{name}}
+          {{- else -}}
+          ""
+          {{- end }}
         helm:
           valueFiles:
             - https://raw.githubusercontent.com/AI-Technology-Apps/argocd-apps/HEAD/{{name}}/values.yaml
