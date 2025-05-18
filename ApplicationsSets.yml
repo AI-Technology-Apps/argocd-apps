@@ -17,7 +17,7 @@ spec:
                 - name: openwebui
                   chart: openwebui
                   repoURL: https://helm.openwebui.com/
-                  version: 1.0.0
+                  version: latest
   template:
     metadata:
       name: '{{name}}'
