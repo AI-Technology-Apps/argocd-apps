@@ -1,0 +1,3 @@
+chart: openwebui
+repoURL: https://helm.openwebui.com/
+version: 1.0.0   # replace with desired version or use "latest" 

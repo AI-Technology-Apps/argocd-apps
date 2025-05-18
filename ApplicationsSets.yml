@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: openwebui-appset
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/AI-Technology-Apps/argocd-apps.git
+              revision: HEAD
+              directories:
+                - path: '*/'
+          - list:
+              elements:
+                - name: openwebui
+                  chart: openwebui
+                  repoURL: https://helm.openwebui.com/
+                  version: 1.0.0
+  template:
+    metadata:
+      name: '{{name}}'
+    spec:
+      project: ai-tools
+      source:
+        repoURL: '{{repoURL}}'
+        chart: '{{chart}}'
+        targetRevision: '{{version}}'
+        helm:
+          valueFiles:
+            - https://raw.githubusercontent.com/AI-Technology-Apps/argocd-apps/HEAD/{{name}}/values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{name}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
