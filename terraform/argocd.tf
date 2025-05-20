@@ -11,7 +11,7 @@ resource "helm_release" "argocd" {
       global:
         domain: "argocd.kjones.org"
         nodeSelector:
-          node-role.kubernetes.io/master: "true"
+          node-role.kubernetes.io/control-plane: "true"
       server:
         extraArgs:
           - --insecure # disable TLS cert verification for local
@@ -27,8 +27,42 @@ resource "helm_release" "argocd" {
   ]
 }
 
-resource "kubernetes_manifest" "applicationset" {
-  depends_on = [ helm_release.argocd ]
-  manifest = yamldecode(file("${path.module}/templates/applicationset.yaml"))
+
+resource "kubernetes_manifest" "argocd_project" {
+  manifest = {
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "AppProject"
+    metadata = {
+      name      = "ai-tools"
+      namespace = "kube-system"
+    }
+    spec = {
+      description = "Project created via Terraform"
+      sourceRepos = [local.repo_url]
+      destinations = [{
+        namespace = "*"
+        server    = "*"
+      }]
+      clusterResourceWhitelist = [{
+        group = "*"
+        kind  = "*"
+      }]
+    }
+  }
+}
+
+
+resource "kubernetes_manifest" "local_applicationset" {
+  depends_on = [ helm_release.argocd, kubernetes_manifest.argocd_project ]
+  manifest = yamldecode(templatefile("${path.module}/templates/local-applicationset.yaml.tpl", {
+    repo_url = local.repo_url
+  }))
+}
+
+resource "kubernetes_manifest" "remote_applicationset" {
+  depends_on = [ helm_release.argocd, kubernetes_manifest.argocd_project ]
+  manifest = yamldecode(templatefile("${path.module}/templates/remote-applicationset.yaml.tpl", {
+    repo_url = local.repo_url
+  }))
 }
   

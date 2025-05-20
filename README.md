@@ -43,9 +43,70 @@ This will:
    git commit -m "Add sealed secret for OpenWebUI"
    ```
 
+## Using Helm Charts
+
+This repository supports both local and remote Helm charts using two separate approaches:
+
+### Simple Approach for Remote Charts Only
+
+For a simpler setup dedicated to remote Helm charts:
+
+1. Create a directory for your app in the remote apps directory (e.g., `apps/remote/myapp/`)  
+2. Create a `repo.yaml` with your Helm chart details:
+   ```yaml
+   # Helm chart details
+   url: "https://charts.bitnami.com/bitnami"
+   chart: "nginx"
+   version: "13.2.0"
+   
+   # ArgoCD application details
+   namespace: "myapp"
+   project: "default"  # Optional - defaults to "default"
+   ```
+3. Add your `values.yaml` with custom configuration
+4. Create and seal your secrets as described above
+
+### Advanced Approach (Supporting Both Local and Remote Charts)
+
+1. Create a directory for your app (e.g., `apps/myapp/`)  
+2. Create a `chart-config.yaml` with remote chart details:
+   ```yaml
+   # Chart configuration for remote chart
+   remote: true
+   repoURL: https://charts.bitnami.com/bitnami
+   chart: nginx
+   version: 13.2.0
+   
+   # ArgoCD application configuration
+   repo:
+     name: myapp
+     namespace: myapp
+     project: default
+   ```
+3. Add your `values.yaml` with custom configuration
+4. Create and seal your secrets as described above
+
+### For Local Helm Charts
+
+1. Create a directory for your app (e.g., `apps/mylocalapp/`)
+2. Include all required Helm chart files (Chart.yaml, templates/, etc.)
+3. Create a `chart-config.yaml` (optional - for local charts):
+   ```yaml
+   # Chart configuration for local chart
+   remote: false
+   
+   # ArgoCD application configuration  
+   repo:
+     name: mylocalapp
+     namespace: mylocalapp-namespace
+     project: default
+   ```
+4. Add your `values.yaml` and sealed secrets
+
 ## Directory Structure
 
 - `apps/openwebui`: Sample app with configuration and sealed secrets
 - `terraform/`: Manages the cluster setup via Terraform
 - `scripts/`: Contains pre-commit hooks for sealed secrets validation
+- `examples/`: Contains example configurations
 

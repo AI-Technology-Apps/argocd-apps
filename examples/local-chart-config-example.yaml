@@ -1,0 +1,14 @@
+# Chart configuration for local chart example
+remote: false
+# No need to specify chart or repoURL for local charts
+
+# ArgoCD application configuration
+repo:
+  name: myapp
+  namespace: myapp-namespace
+  project: default
+
+# Optional: specify additional value files
+# values:
+#   files:
+#    - values-production.yaml

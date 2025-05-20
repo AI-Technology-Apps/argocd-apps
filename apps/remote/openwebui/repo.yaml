@@ -1,0 +1,9 @@
+# Helm chart details
+url: "https://helm.openwebui.com/"
+chart: "open-webui"
+version: "6.16.0"  # Replace with actual version
+path: "charts"
+
+# ArgoCD application details
+namespace: "openwebui"
+project: "ai-tools"  # Or omit to use default
