@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: kubeseal-encrypt
+        name: Encrypt secrets with kubeseal
+        entry: /bin/bash ./scripts/kubeseal-pre-commit.sh
+        language: script
+        files: sealedsecret.yaml

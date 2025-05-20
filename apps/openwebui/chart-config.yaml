@@ -1,0 +1,7 @@
+repo:
+  name: openwebui
+  namespace: openwebui
+  repoURL: https://helm.openwebui.com/
+  path: openwebui
+  project: ai-tools
+  

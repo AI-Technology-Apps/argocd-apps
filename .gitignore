@@ -1,1 +1,11 @@
 .venv
+
+
+*.yaml.bak
+/apps/**/*secret*
+!sealedsecret.yaml
+.kube/
+
+terraform.tfstate
+terraform.tfstate.backup
+*tfstate*

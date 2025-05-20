@@ -1,0 +1,52 @@
+name: GitOps Validate & Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'terraform/**'
+      - '.sops.yaml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Validate Helm/Kustomize apps
+        run: |
+          for d in $(find ./apps -name chart-config.yaml -exec dirname {} \;); do
+            helm lint $d || echo "Helm validation failed for $d"
+          done
+
+      - name: Install SOPS
+        run: |
+          wget https://github.com/mozilla/sops/releases/download/v3.8.1/sops-v3.8.1.linux -O /usr/local/bin/sops
+          chmod +x /usr/local/bin/sops
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import
+
+      - name: Validate SOPS secrets
+        run: |
+          for f in $(find ./apps -name '*.enc.yaml'); do
+            sops -d $f > /dev/null || exit 1
+          done
+
+      - name: Validate Terraform (infra + app-specific)
+        run: |
+          terraform -chdir=terraform init
+          terraform -chdir=terraform validate
+
+          for d in $(find ./apps -name main.tf -exec dirname {} \;); do
+            terraform -chdir=$d init
+            terraform -chdir=$d validate
+          done

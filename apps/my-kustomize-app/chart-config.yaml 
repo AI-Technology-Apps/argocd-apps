@@ -1,3 +1,0 @@
-name: my-kustomize-app
-type: kustomize
-path: ./apps/my-kustomize-app

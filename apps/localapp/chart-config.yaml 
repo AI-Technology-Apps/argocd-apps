@@ -1,4 +1,0 @@
-name: localapp
-type: helm-local
-chart: ./apps/localapp
-version: 0.1.0
