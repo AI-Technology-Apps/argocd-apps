@@ -3,26 +3,12 @@
 ## Requirements
 - Terraform 1.5+
 - Helm
-- SOPS
-- GPG Key (imported or generated)
+- kubeseal CLI
 - kubectl configured for your local k3s cluster
 
 ## Instructions
 
-1. Generate or import a GPG key:
-   ```bash
-   gpg --full-generate-key
-   gpg --list-keys
-   ```
-
-2. Export the private key:
-   ```bash
-   gpg --export-secret-keys --armor "<your-key-id>" > terraform/gpg-private.asc
-   ```
-
-3. Update `.sops.yaml` with your GPG fingerprint.
-
-4. Navigate to the Terraform directory and initialize:
+1. Navigate to the Terraform directory and initialize:
    ```bash
    cd terraform
    terraform init
@@ -31,14 +17,35 @@
 
 This will:
 - Install Argo CD into `kube-system`
-- Install External Secrets Operator
-- Create SecretStore + ExternalSecret
-- Register your GPG key into the cluster
-- Apply ApplicationSet to detect your app automatically
+- Install sealed-secrets-controller into `kube-system`
+- Apply ApplicationSet to detect your apps automatically
+
+2. Create a secret YAML file in your app directory (e.g., `apps/openwebui/secret.yaml`):
+   ```yaml
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: your-secret-name
+     namespace: your-namespace
+   data:
+     username: YWRtaW4=  # base64 encoded values
+     password: cGFzc3dvcmQ=
+   ```
+
+3. Seal the secret using kubeseal:
+   ```bash
+   kubeseal --controller-name=sealed-secrets-controller --controller-namespace=kube-system --format yaml < apps/openwebui/secret.yaml > apps/openwebui/sealedsecret.yaml
+   ```
+
+4. Commit only the sealed secret to git (the pre-commit hook will validate it's properly sealed):
+   ```bash
+   git add apps/openwebui/sealedsecret.yaml
+   git commit -m "Add sealed secret for OpenWebUI"
+   ```
 
 ## Directory Structure
 
-- `apps/app1`: Your sample Helm app and secret
+- `apps/openwebui`: Sample app with configuration and sealed secrets
 - `terraform/`: Manages the cluster setup via Terraform
-- `clusters/production`: Argo CD ApplicationSet manifest
+- `scripts/`: Contains pre-commit hooks for sealed secrets validation
 
