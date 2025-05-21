@@ -51,94 +51,47 @@ resource "kubernetes_manifest" "argocd_project" {
   }
 }
 
-# Direct manifest definitions for ApplicationSets
-resource "kubernetes_manifest" "local_applicationset" {
-  depends_on = [helm_release.argocd, kubernetes_manifest.argocd_project]
-  manifest = {
-    apiVersion = "argoproj.io/v1alpha1"
-    kind       = "ApplicationSet"
-    metadata = {
-      name      = "local-helm-charts"
-      namespace = "kube-system"
-    }
-    spec = {
-      generators = [{
-        git = {
-          repoURL     = local.repo_url
-          revision    = "HEAD"
-          directories = [{
-            path = "apps/local/*"
-          }]
-        }
-      }]
-      template = {
-        metadata = {
-          name = "{{path.basename}}"
-        }
-        spec = {
-          project = "ai-tools"
-          source = {
-            repoURL         = local.repo_url
-            targetRevision  = "HEAD"
-            path            = "{{path.path}}"
-            helm = {
-              valueFiles = ["values.yaml"]
-            }
-          }
-          destination = {
-            server    = "https://kubernetes.default.svc"
-            namespace = "{{path.basename}}"
-          }
-          syncPolicy = {
-            automated = {
-              prune     = true
-              selfHeal  = true
-            }
-            syncOptions = ["CreateNamespace=true"]
-          }
-        }
-      }
-    }
-  }
-}
 
-resource "kubernetes_manifest" "remote_applicationset" {
-  depends_on = [helm_release.argocd, kubernetes_manifest.argocd_project]
+resource "kubernetes_manifest" "applicationset" {
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "ApplicationSet"
     metadata = {
-      name      = "remote-helm-charts"
+      name      = "helm-charts"
       namespace = "kube-system"
     }
     spec = {
-      generators = [{
-        git = {
-          repoURL     = local.repo_url
-          revision    = "HEAD"
-          directories = [{
-            path = "apps/remote/*/repo.yaml"
-          }]
+      generators = [
+        {
+          git = {
+            repoURL  = local.repo_url
+            revision = "HEAD"
+            files = [
+              {
+                path = "apps/*/repo.yaml"
+              }
+            ]
+          }
         }
-      }]
+      ]
       template = {
         metadata = {
-          name = "{{path.basename}}"
+          name = "{{name}}"      # from repo.yaml
         }
         spec = {
-          project = "ai-tools"
+          project = "{{project}}"  # from repo.yaml, must exist in ArgoCD
           source = {
-            repoURL        = "{{file.repo.url}}"
-            chart          = "{{file.repo.chart}}"
-            targetRevision = "{{file.repo.version}}"
-            path           = "{{file.repo.path}}"
+            repoURL        = local.repo_url    # from repo.yaml
+            chart          = "{{chart}}"    # from repo.yaml
+            targetRevision = "{{version}}"  # from repo.yaml
+            path           = "{{path}}"     # from repo.yaml
             helm = {
               valueFiles = ["values.yaml"]
             }
           }
           destination = {
             server    = "https://kubernetes.default.svc"
-            namespace = "{{file.repo.namespace | default path.basename}}"
+            namespace = "{{namespace}}"   # from repo.yaml
           }
           syncPolicy = {
             automated = {

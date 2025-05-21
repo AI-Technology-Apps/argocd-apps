@@ -1,8 +1,7 @@
 # Helm chart details
-url: "https://helm.openwebui.com/"
-chart: "open-webui"
-version: "6.16.0"  # Replace with actual version
-path: "charts"
+chart: "openwebui"
+version: "0.1.0"  # Replace with actual version
+path: "apps/openwebui"
 
 # ArgoCD application details
 name: "open-web-ui"
