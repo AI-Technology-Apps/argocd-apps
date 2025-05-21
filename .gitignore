@@ -3,7 +3,7 @@
 
 *.yaml.bak
 /apps/**/*secret*
-!sealedsecret.yaml
+!/apps/**/sealedsecret.yaml
 .kube/
 
 terraform.tfstate
