@@ -82,8 +82,7 @@ resource "kubernetes_manifest" "applicationset" {
           project = "{{project}}"  # from repo.yaml, must exist in ArgoCD
           source = {
             repoURL        = local.repo_url    # from repo.yaml
-            chart          = "{{chart}}"    # from repo.yaml
-            targetRevision = "{{version}}"  # from repo.yaml
+            targetRevision = "HEAD"  # from repo.yaml
             path           = "{{path}}"     # from repo.yaml
             helm = {
               valueFiles = ["values.yaml"]
